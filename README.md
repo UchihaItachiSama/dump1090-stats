@@ -10,7 +10,7 @@ Use `-h` or `--help` to see the available options.
 
 ```shell
 $ python3 flightStats.py -h
-usage: flightStats.py [-h] [-v] (--dump1090-fa | --dump1090-mutability) (--latest | --history)
+usage: flightStats.py [-h] [-v] (--dump1090-fa | --dump1090-mutability) (--latest | --history) [--csv]
 
 dump1090 Flight Stats
 
@@ -22,7 +22,10 @@ options:
                         Read flight stats from dump1090-mutability JSON files
   --latest              Get latest flight stats (from aircraft.json)
   --history             Get historical flight stats (from history_n.json)
+  --csv                 Dump data into a CSV file: flights_<RFC3339-timestamp>.csv
 ```
+
+## Usage
 
 Example showing data from `dump1090-fa` file `aircraft.json`
 
@@ -74,3 +77,36 @@ $ python3 flightStats.py --dump1090-fa --history
 | 80138c | IAD990   |       7100 |       7625 | 210.3 |   180 |   206 |  0.308 |   160.3 |        -0.53 |   -5.6 |         161.7 |       -1088 |       -1024 |     2643 | A0         |    1015   |               6000 | 13.2763 | 77.4118 |     8 |  186 |        8.1 |         0 |       8 |       0 |     2 | unknown    | []                                                                                 | []     |        265 |    0.3 |  -24.1 |             |            |       |       |               |                    |                                       |
 +--------+----------+------------+------------+-------+-------+-------+--------+---------+--------------+--------+---------------+-------------+-------------+----------+------------+-----------+--------------------+---------+---------+-------+------+------------+-----------+---------+---------+-------+------------+------------------------------------------------------------------------------------+--------+------------+--------+--------+-------------+------------+-------+-------+---------------+--------------------+---------------------------------------+
 <----snipped---->
+```
+
+### Dump data to CSV File
+
+Using the `--csv` option the JSON data will be dumped to a CSV file. See Example below
+
+```shell
+$ python3 flightStats.py --dump1090-fa --latest --csv
+2024-03-13 18:05:08,654 - INFO - ---------- START ----------
+2024-03-13 18:05:08,654 - INFO - Set to load flight stats from dump1090-fa
+2024-03-13 18:05:08,654 - INFO - Set to load latest flight stats
+2024-03-13 18:05:08,654 - INFO - Trying to load data from /var/run/dump1090-fa/aircraft.json
+2024-03-13 18:05:08,654 - INFO - Data loaded successfully from file!
+2024-03-13 18:05:08,654 - INFO - Parsing aircraft information
+2024-03-13 18:05:08,655 - INFO - Skipping dataset [ICAO: 800303 ] due to missing flight information!
+2024-03-13 18:05:08,655 - INFO - Skipping dataset [ICAO: 8004a7 ] due to missing flight information!
+2024-03-13 18:05:08,655 - INFO - Skipping dataset [ICAO: 800db2 ] due to missing flight information!
++--------+----------+------------+------------+-------+---------+-------------+----------+-----------+--------------------+-----------+---------+---------+-------+------------+--------+--------+------------+--------+--------+
+| hex    | flight   |   alt_baro |   alt_geom |    gs |   track |   baro_rate |   squawk |   nav_qnh |   nav_altitude_mcp |   version |   nac_p |   nac_v |   sil | sil_type   | mlat   | tisb   |   messages |   seen |   rssi |
++========+==========+============+============+=======+=========+=============+==========+===========+====================+===========+=========+=========+=======+============+========+========+============+========+========+
+| 800cbe | IGO7389  |       7400 |       7825 | 198.7 |   298.9 |        -576 |     0237 |    1015.2 |               6000 |         0 |      10 |       0 |     2 | unknown    | []     | []     |          9 |    7.9 |    -24 |
++--------+----------+------------+------------+-------+---------+-------------+----------+-----------+--------------------+-----------+---------+---------+-------+------------+--------+--------+------------+--------+--------+
+2024-03-13 18:05:08,655 - INFO - Dumping CSV data to file: [ ./flights_2024-03-13T12:35:08.655779+00:00.csv ]
+2024-03-13 18:05:08,656 - INFO - ---------- END ----------
+```
+
+Generated CSV File.
+
+```csv
+$ cat flights_2024-03-13T12\:35\:08.655779+00\:00.csv
+sil,sil_type,nac_p,mlat,tisb,version,alt_baro,nav_altitude_mcp,messages,alt_geom,baro_rate,seen,squawk,nac_v,flight,gs,track,nav_qnh,hex,rssi
+2,unknown,10,[],[],0,7400,6000,9,7825,-576,7.9,0237,0,IGO7389 ,198.7,298.9,1015.2,800cbe,-24.0
+```
