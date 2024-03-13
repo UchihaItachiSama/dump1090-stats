@@ -6,6 +6,8 @@ import json
 import logging
 from tabulate import tabulate
 import argparse
+import csv
+import datetime
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -86,6 +88,24 @@ def pretty(data):
     if data != None and len(data) > 0:
             print(tabulate(data, headers = "keys", tablefmt="grid"))
 
+def dumpCSV(data):
+    tstamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    if data != None and len(data) > 0:
+        filename = "./flights_" + str(tstamp) + ".csv"
+        logger.info("Dumping CSV data to file: [ {} ]".format(filename))
+        unique_keys = set()
+        for d in data:
+            unique_keys.update(d.keys())
+        unique_keys_list = list(unique_keys)
+        try:
+            with open(filename, "w", newline='') as fobj:
+                dict_writer = csv.DictWriter(fobj, unique_keys_list)
+                dict_writer.writeheader()
+                dict_writer.writerows(data)
+            fobj.close()
+        except Exception as e:
+            logger.error("Failed to write data to CSV file: \n{}".format(e))
+
 def verifyInputs(args):
     mode = []
     if args.decoder_fa != None and args.decoder_fa == True:
@@ -113,6 +133,8 @@ def main(args):
     aircrafts = loadFlightData(mode)
     data = sanitizeData(aircrafts)
     pretty(data)
+    if args.dump_csv == True:
+        dumpCSV(data=data)
     logger.info("---------- END ----------")
 
 if __name__ == "__main__":
@@ -128,5 +150,7 @@ if __name__ == "__main__":
     group2 = parser.add_mutually_exclusive_group(required=True)
     group2.add_argument('--latest', action='store_true', dest='latest', help='Get latest flight stats (from aircraft.json)')
     group2.add_argument('--history', action='store_true', dest='history', help='Get historical flight stats (from history_n.json)')
+    # Optional dump information as CSV file as well
+    parser.add_argument('--csv', action='store_true', required=False, dest='dump_csv', help='Dump data into a CSV file: flights_<RFC3339-timestamp>.csv')
     args = parser.parse_args()
     main(args)
